@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Bebas Neue', Impact, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Registered so the accent colour can crossfade between cars */
+@property --accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #5fb4e8;
+}
+
+html,
+body {
+  background: #060607;
+  color: #fff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #ff6a13;
+  color: #000;
+}
+
+/* ---------- film grain (static: no blend mode, no animation, much cheaper) ---------- */
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+@keyframes streak {
+  from { transform: translateX(0); }
+  to { transform: translateX(-170vw); }
+}
+
+/* ---------- marquee + floating blobs ---------- */
+.marquee {
+  animation: marquee 45s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+.float-slow {
+  animation: floaty 9s ease-in-out infinite;
+}
+@keyframes floaty {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -40px) scale(1.12); }
+}
+
+/* ---------- hover polish ---------- */
+.fame-row {
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+}
+.fame-row:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 40px rgba(43, 91, 255, 0.18);
+}
+
+#circuit .grid > div:first-child > button {
+  transition: transform 0.25s, background 0.25s, border-color 0.25s;
+}
+#circuit .grid > div:first-child > button:hover {
+  transform: translateX(8px);
+}
+
+#compare .snap-x > button {
+  transition: transform 0.25s, background 0.25s;
+}
+#compare .snap-x > button:hover {
+  transform: translateY(-8px);
+}
+
+/* ---------- rain ---------- */
+@keyframes rainfall {
+  from { transform: translateY(-120px) rotate(12deg); }
+  to { transform: translateY(110vh) rotate(12deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-line,
+  .marquee,
+  .float-slow {
+    animation: none;
+  }
+}
