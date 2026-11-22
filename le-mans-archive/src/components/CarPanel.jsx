@@ -12,23 +12,26 @@ function CarPanel({ car, near }) {
 
   return (
     <section className="car-panel relative z-10 h-screen w-screen shrink-0" aria-label={`${year} ${car.fullName}`}>
-      {/* LAYER 1: giant background name */}
+      {/* LAYER 1: giant background name.
+          Outline text + a solid copy on top. Only OPACITY animates (no per-frame colour repaint). */}
       <h2
-        className="js-big-name pointer-events-none absolute inset-x-0 top-[15vh] select-none whitespace-nowrap text-center font-display leading-none text-[clamp(3.5rem,10vw,11rem)] will-change-transform"
+        className="js-big-name pointer-events-none absolute inset-x-0 top-[15vh] select-none whitespace-nowrap text-center font-display leading-none text-[clamp(3.5rem,10vw,11rem)]"
         style={{
           opacity: 0,
           color: 'transparent',
           WebkitTextStroke: `2px ${hexToRgba(accent, 0.75)}`,
         }}
       >
+        <span
+          aria-hidden
+          className="js-name-fill pointer-events-none absolute inset-0"
+          style={{ opacity: 0, color: hexToRgba(accent, 0.55), WebkitTextStroke: '0' }}
+        >
+          {year} // {name}
+        </span>
         {year} // {name}
       </h2>
-      {/* F1 crossover tag (from f1History.hasF1Link) */}
-      {car.f1History?.hasF1Link && (
-        <div className="absolute right-6 top-[calc(15vh+clamp(3.5rem,10vw,11rem)+1rem)] z-20 rounded-md border border-blue-400/50 bg-blue-500/15 px-2.5 py-1 font-mono text-[9px] tracking-[0.25em] text-blue-200 md:right-12">
-          F1 CROSSOVER
-        </div>
-      )}
+
       {/* LAYER 2: car */}
       <div
         className="js-car absolute inset-x-0 mx-auto"
@@ -52,4 +55,4 @@ function CarPanel({ car, near }) {
   )
 }
 
-export default memo(CarPanel) 
+export default memo(CarPanel)

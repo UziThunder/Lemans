@@ -39,6 +39,28 @@ body {
   color: #000;
 }
 
+/* ---------- blue scrollbar on the Compare car rail ---------- */
+#compare .snap-x {
+  scrollbar-width: auto;
+  scrollbar-color: #2b5bff #0d0d12; /* thumb, track */
+}
+@supports not (scrollbar-color: auto) {
+  #compare .snap-x::-webkit-scrollbar {
+    height: 12px;
+  }
+  #compare .snap-x::-webkit-scrollbar-track {
+    background: #0d0d12;
+    border-radius: 999px;
+  }
+  #compare .snap-x::-webkit-scrollbar-thumb {
+    background: #2b5bff;
+    border-radius: 999px;
+  }
+  #compare .snap-x::-webkit-scrollbar-thumb:hover {
+    background: #4d7bff;
+  }
+}
+
 /* ---------- film grain (static: no blend mode, no animation, much cheaper) ---------- */
 .grain {
   position: absolute;

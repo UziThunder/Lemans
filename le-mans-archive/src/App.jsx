@@ -1,10 +1,9 @@
-import NotFound from './components/NotFound'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { Volume2, VolumeX } from 'lucide-react'
-import F1Crossover from './components/F1Crossover'
+
 import { leMansCars } from './data/leMansCars'
 import { buildCarTimeline } from './animations/carTimeline'
 import { initScrollFx } from './animations/scrollFx'
@@ -20,6 +19,8 @@ import Eras from './components/Eras'
 import Circuit from './components/Circuit'
 import HallOfFame from './components/HallOfFame'
 import Compare from './components/Compare'
+import Footer from './components/Footer'
+import BackToTop from './components/BackToTop'
 import Nav from './components/Nav'
 import Rain from './components/Rain'
 import SpecModal from './components/SpecModal'
@@ -27,6 +28,15 @@ import { SkyBackdrop, RaceClock } from './components/DayNight'
 import { AmbientGlow, FrontFX } from './components/Atmosphere'
 
 gsap.registerPlugin(ScrollTrigger)
+
+// Memoised so a car change (App state) doesn't re-render the big sections that never change
+const NavM = memo(Nav)
+const HeroM = memo(Hero)
+const ErasM = memo(Eras)
+const CircuitM = memo(Circuit)
+const HallOfFameM = memo(HallOfFame)
+const CompareM = memo(Compare)
+const FooterM = memo(Footer)
 
 const SCROLL_LENGTH = 2.0 // vertical scroll per 100vw of horizontal travel
 const TOTAL_KM = 5000
@@ -73,7 +83,7 @@ export default function App() {
       clearTimeout(snapTimer)
       snapTimer = setTimeout(() => {
         const st = stRef.current
-        if (!st || performance.now() < snapUntil.current) return
+        if (!st || progress.dragging || performance.now() < snapUntil.current) return
         const range = st.end - st.start
         const prog = (lenis.scroll - st.start) / range
         if (prog < 0 || prog > 1) return
@@ -132,9 +142,11 @@ export default function App() {
         },
         onUpdate() {
           const p = this.progress()
-          // --progress goes ONLY to the mini-map, not the page root (root writes restyled the whole page)
+          // --progress goes ONLY to the mini-map (not the page root). While the red slider is being
+          // dragged, the slider sets it itself.
           progress.value = p
-          progress.el?.style.setProperty('--progress', p)
+          if (!progress.dragging) progress.el?.style.setProperty('--progress', p)
+          progress.subs.forEach((fn) => fn(p)) // moves the road
           if (kmRef.current) kmRef.current.textContent = Math.round(p * TOTAL_KM).toLocaleString('en-US')
           const idx = Math.round(p * (panels.length - 1))
           if (idx !== activeRef.current) {
@@ -207,9 +219,36 @@ export default function App() {
     [total]
   )
 
+  // Red slider: follow the pointer instantly while dragging
+  const scrubTo = useCallback((fraction) => {
+    const st = stRef.current
+    const lenis = lenisRef.current
+    if (!st || !lenis) return
+    snapUntil.current = performance.now() + 1000
+    lenis.scrollTo(st.start + fraction * (st.end - st.start), { immediate: true, force: true })
+  }, [])
+
+  // Red slider released: glide to the nearest car
+  const scrubEnd = useCallback(
+    (i) => {
+      const st = stRef.current
+      const lenis = lenisRef.current
+      if (!st || !lenis) return
+      const target = st.start + (i / (total - 1)) * (st.end - st.start)
+      snapUntil.current = performance.now() + 1800
+      lenis.scrollTo(target, { duration: 1.2, easing: easeOutQuart })
+    },
+    [total]
+  )
+
   const jump = useCallback((id) => {
     snapUntil.current = performance.now() + 2400
     lenisRef.current?.scrollTo('#' + id, { duration: 1.8 })
+  }, [])
+
+  const toTop = useCallback(() => {
+    snapUntil.current = performance.now() + 3000 // don't let car-snapping fight the glide up
+    lenisRef.current?.scrollTo(0, { duration: 2.2, easing: easeOutQuart })
   }, [])
 
   const closeSpec = useCallback(() => setSpecOpen(false), [])
@@ -235,17 +274,19 @@ export default function App() {
     'flex items-center gap-2 rounded-xl border border-white/20 bg-black/70 px-4 py-2 font-mono text-[10px] tracking-[0.25em] transition hover:bg-white/15'
 
   return (
-    <main style={{ '--accent': car.accent, transition: '--accent 0.9s ease' }}>
+    // No CSS transition on --accent: animating an inherited custom property restyled the whole page every frame.
+    <main style={{ '--accent': car.accent }}>
       <StartLights onGo={() => setReady(true)} />
-      <Nav visible={ready && !inShow} onJump={jump} />
-      <Hero ready={ready} onJump={jump} />
-      <Eras />
+      <NavM visible={ready && !inShow} onJump={jump} />
+      <HeroM ready={ready} onJump={jump} />
+      <ErasM />
 
       <div id="showcase" ref={wrapperRef} className="relative h-screen w-screen overflow-hidden bg-[#060607]">
         <SkyBackdrop />
         <AmbientGlow />
+        {/* Road is a fixed strip (not part of the moving track): only tiny layers move */}
+        <RoadTrack total={total} totalKm={TOTAL_KM} />
         <div ref={trackRef} className="relative flex h-screen w-screen flex-nowrap will-change-transform">
-          <RoadTrack total={total} totalKm={TOTAL_KM} />
           {leMansCars.map((c, i) => (
             <CarPanel key={c.id} car={c} near={Math.abs(i - active) <= 2} />
           ))}
@@ -254,13 +295,12 @@ export default function App() {
         <FrontFX fxRef={fxRef} />
       </div>
 
-      <Circuit />
-      <HallOfFame />
-            <Circuit />
+      <CircuitM />
+      <HallOfFameM />
+      <CompareM />
+      <FooterM />
 
-
-    <F1Crossover />
-      <Compare />
+      <BackToTop onClick={toTop} lifted={inShow} />
 
       <div style={{ visibility: inShow ? 'visible' : 'hidden', opacity: inShow ? 1 : 0, transition: 'opacity .4s' }}>
         <HUD active={active} total={total} kmRef={kmRef} speedRef={speedRef} />
@@ -274,15 +314,10 @@ export default function App() {
             FULL SPEC SHEET →
           </button>
         </div>
-        <MiniMap cars={leMansCars} active={active} onSelect={goTo} />
+        <MiniMap cars={leMansCars} active={active} onSelect={goTo} onScrub={scrubTo} onScrubEnd={scrubEnd} />
       </div>
 
-           {/* Unknown car id (from a deep link, a stale URL, or a removed car) */}
-      {!leMansCars[active] ? (
-        <NotFound variant="noCar" onAction={() => goTo(0)} />
-      ) : (
-        <SpecModal car={car} open={specOpen} onClose={closeSpec} />
-      )}
+      <SpecModal car={car} open={specOpen} onClose={closeSpec} />
     </main>
   )
 }

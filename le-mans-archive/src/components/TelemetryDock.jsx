@@ -28,9 +28,9 @@ export default function TelemetryDock({ car }) {
   const { accent } = car
 
   return (
-    // No backdrop-blur here: blurring a moving background every frame was a big source of lag.
+    // No backdrop-blur and no will-change: both were costing frames.
     <div
-      className="js-dock absolute inset-x-4 bottom-[76px] z-30 mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0e]/90 shadow-2xl will-change-transform md:inset-x-8"
+      className="js-dock absolute inset-x-4 bottom-[76px] z-30 mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0e]/90 shadow-2xl md:inset-x-8"
       style={{ opacity: 0 }}
     >
       <div
