@@ -135,7 +135,7 @@ export default function Circuit() {
 
         <div className="mt-10 grid gap-8 lg:grid-cols-[300px_1fr]">
           {/* corner list */}
-          <div className="flex max-h-[420px] flex-col gap-2 overflow-y-auto overflow-x-hidden pr-3 lg:max-h-[560px]">
+          <div className="order-2 flex max-h-[280px] flex-col gap-2 overflow-y-auto overflow-x-hidden pr-3 lg:order-1 lg:max-h-[560px]">
             {CORNERS.map((k, i) => (
               <button
                 key={k[0]}
@@ -156,7 +156,7 @@ export default function Circuit() {
           </div>
 
           {/* map + telemetry */}
-          <div className="min-w-0">
+          <div className="order-1 min-w-0 lg:order-2">
             <div className="rounded-3xl border border-white/10 bg-black/40 p-3 md:p-5">
               <svg viewBox="60 40 480 270" className="h-auto w-full" role="img" aria-label="Le Mans circuit map">
                 {/* path #0: dim base road */}

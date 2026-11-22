@@ -16,7 +16,7 @@ export default function BackToTop({ onClick, lifted }) {
     <button
       onClick={onClick}
       aria-label="Back to top"
-      className="fixed left-4 z-[55] flex items-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 font-mono text-[10px] tracking-[0.2em] text-white shadow-lg transition-all duration-300 hover:bg-white/15 md:left-8"
+          className={`fixed left-4 z-[55] flex items-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 font-mono text-[10px] tracking-[0.2em] text-white shadow-lg transition-all duration-300 hover:bg-white/15 md:left-8 ${lifted ? 'max-md:hidden' : ''}`}
       style={{
         bottom: lifted ? 80 : 16,
         opacity: show ? 1 : 0,

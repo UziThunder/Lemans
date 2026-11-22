@@ -16,10 +16,8 @@ function CarPanel({ car, near }) {
 
   return (
     <section className="car-panel relative z-10 h-screen w-screen shrink-0" aria-label={`${year} ${car.fullName}`}>
-      {/* LAYER 1: giant background name.
-          Outline text + a solid copy on top. Only OPACITY animates (no per-frame colour repaint). */}
       <h2
-        className="js-big-name pointer-events-none absolute inset-x-0 top-[15vh] select-none whitespace-nowrap px-2 text-center font-display leading-none"
+        className="js-big-name pointer-events-none absolute inset-x-0 top-[17vh] select-none whitespace-nowrap px-2 text-center font-display leading-none md:top-[15vh]"
         style={{
           fontSize,
           opacity: 0,
@@ -37,12 +35,13 @@ function CarPanel({ car, near }) {
         {label}
       </h2>
 
-      {/* LAYER 2: car */}
+      {/* LAYER 2: car. On phones it is wider and sits higher so the stats dock never covers it.
+          If the dock still touches the car, raise the 360px in --car-b. */}
       <div
-        className="js-car absolute inset-x-0 mx-auto"
+        className="js-car absolute inset-x-0 mx-auto [--car-b:max(44vh,360px)] [--car-w:94vw] md:[--car-b:33vh] md:[--car-w:62vw]"
         style={{
-          width: `calc(min(62vw, 880px) * ${scale})`,
-          bottom: `calc(33vh - ${sink}px)`,
+          width: `calc(min(var(--car-w), 880px) * ${scale})`,
+          bottom: `calc(var(--car-b) - ${sink}px)`,
         }}
       >
         <div className="js-drive relative">
@@ -54,7 +53,6 @@ function CarPanel({ car, near }) {
         </div>
       </div>
 
-      {/* LAYER 3: bottom telemetry dock */}
       <TelemetryDock car={car} />
     </section>
   )

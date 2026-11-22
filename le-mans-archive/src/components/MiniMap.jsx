@@ -73,7 +73,7 @@ export default function MiniMap({ cars, active, onSelect, onScrub, onScrubEnd })
               />
               {/* with 20 cars, hide every second label on phones (the active one always shows) */}
               <span
-                className={`mt-2 font-mono text-[10px] tracking-widest transition-colors duration-300 md:text-[11px] ${i % 2 && !isActive ? 'hidden md:block' : ''}`}
+                className={`mt-2 font-mono text-[10px] tracking-widest transition-colors duration-300 md:text-[11px]${i % 4 && !isActive ? 'hidden md:block' : ''}`}
                 style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.4)' }}
               >
                 {car.year}

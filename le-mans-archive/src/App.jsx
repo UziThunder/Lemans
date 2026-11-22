@@ -29,7 +29,7 @@ import { SkyBackdrop, RaceClock } from './components/DayNight'
 import { AmbientGlow, FrontFX } from './components/Atmosphere'
 
 gsap.registerPlugin(ScrollTrigger)
-
+ScrollTrigger.config({ ignoreMobileResize: true })
 // Memoised so a car change (App state) doesn't re-render the big sections that never change
 const NavM = memo(Nav)
 const HeroM = memo(Hero)
@@ -272,9 +272,8 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [ready, specOpen, goTo, total])
 
-  const pill =
-    'flex items-center gap-2 rounded-xl border border-white/20 bg-black/70 px-4 py-2 font-mono text-[10px] tracking-[0.25em] transition hover:bg-white/15'
-
+   const pill =
+    'flex items-center gap-2 rounded-xl border border-white/20 bg-black/70 px-3 py-1.5 font-mono text-[9px] tracking-[0.2em] transition hover:bg-white/15 md:px-4 md:py-2 md:text-[10px] md:tracking-[0.25em]'
   return (
     // No CSS transition on --accent: animating an inherited custom property restyled the whole page every frame.
     <main style={{ '--accent': car.accent }}>
@@ -308,13 +307,14 @@ export default function App() {
       <div style={{ visibility: inShow ? 'visible' : 'hidden', opacity: inShow ? 1 : 0, transition: 'opacity .4s' }}>
         <HUD active={active} total={total} kmRef={kmRef} speedRef={speedRef} />
         <RaceClock />
-        <div className="fixed right-5 top-28 z-50 flex flex-col items-end gap-2 md:right-10">
+        <div className="fixed right-3 top-20 z-50 flex flex-col items-end gap-2 md:right-10 md:top-28">
           <button onClick={toggleSound} className={pill}>
             {soundOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
             ENGINE {soundOn ? 'ON' : 'OFF'}
           </button>
           <button onClick={() => setSpecOpen(true)} className={pill}>
-            FULL SPEC SHEET →
+            <span className="md:hidden">SPECS</span>
+            <span className="hidden md:inline">FULL SPEC SHEET →</span>
           </button>
         </div>
         <MiniMap cars={leMansCars} active={active} onSelect={goTo} onScrub={scrubTo} onScrubEnd={scrubEnd} />
