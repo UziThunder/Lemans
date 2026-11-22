@@ -90,6 +90,14 @@ body {
   50% { transform: translate(30px, -40px) scale(1.12); }
 }
 
+/* ---------- hero: rotating ring around the car stage ---------- */
+.hero-spin {
+  animation: heroSpin 40s linear infinite;
+}
+@keyframes heroSpin {
+  to { transform: rotate(360deg); }
+}
+
 /* ---------- hover polish ---------- */
 .fame-row {
   transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
@@ -123,7 +131,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .streak-line,
   .marquee,
-  .float-slow {
+  .float-slow,
+  .hero-spin {
     animation: none;
   }
 }
