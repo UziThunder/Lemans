@@ -1,76 +1,247 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-// Speeds/gears are rounded approximations for a modern prototype. x/y are on the 700x340 schematic (not to scale).
+// Track traced from the 51GT3 layout (viewBox 60 40 480 270). Clockwise, start/finish bottom-left.
+const TRACK =
+  'M 192 271 L 150 272 L 138 272 Q 127 270 128 260 L 136 252 L 134 245 L 112 236 L 104 226 L 94 218 ' +
+  'L 86 205 L 86 192 Q 90 184 100 178 L 238 122 L 244 119 L 380 71 L 386 70 L 415 64 L 505 60 L 515 62 ' +
+  'L 492 130 L 462 188 L 445 198 L 441 205 L 446 228 L 400 238 L 380 252 L 345 272 L 335 268 L 325 256 ' +
+  'L 312 256 L 300 270 L 290 272 L 280 262 L 266 256 L 250 258 L 218 268 L 206 270 L 192 271'
+
+const BLUE = '#2b5bff'
+const AMBER = '#ffb020'
+const LAP_SECONDS = 197.297 // 3:17.297, the race lap record
+
+// [number, name, type, approx km/h, sector, x, y, description]
+// Speeds are rough, for show. Names/positions follow the usual Le Mans layout.
 const CORNERS = [
-  { n: 'Dunlop Chicane & Bridge', tag: 'SECTOR 1', kmh: 120, gear: 3, g: 3.0, x: 150, y: 150, text: 'The fast run under the Dunlop Bridge funnels into a tight chicane, the first big braking test after the pit straight.' },
-  { n: 'Tertre Rouge', tag: 'SECTOR 1', kmh: 230, gear: 5, g: 2.5, x: 205, y: 70, text: 'A long right-hander that feeds onto the Mulsanne Straight. Exit speed here decides the whole straight.' },
-  { n: 'Les Hunaudières (Mulsanne)', tag: 'SECTOR 2', kmh: 340, gear: 6, g: 0.5, x: 400, y: 62, text: 'Nearly 6 km of flat-out running, split by two chicanes since 1990. Where top-speed records were set.' },
-  { n: 'Mulsanne Corner', tag: 'SECTOR 2', kmh: 75, gear: 2, g: 4.0, x: 590, y: 78, text: 'The end of the straight: huge braking from over 300 km/h down to a slow right-hander.' },
-  { n: 'Indianapolis & Arnage', tag: 'SECTOR 3', kmh: 70, gear: 2, g: 3.5, x: 600, y: 230, text: 'Two slow corners that stress brakes and traction, with Arnage among the slowest points on the lap.' },
-  { n: 'Porsche Curves', tag: 'SECTOR 3', kmh: 250, gear: 6, g: 4.5, x: 400, y: 290, text: 'A sweeping, wall-lined sequence of fast corners where downforce and driver commitment matter most.' },
-  { n: 'Ford Chicanes', tag: 'SECTOR 3', kmh: 110, gear: 3, g: 3.0, x: 215, y: 285, text: 'The last chicanes before the pit straight, a final braking zone that often decides late-race battles.' },
+  [1, 'DUNLOP CURVE', 'RIGHT', 260, 'S1', 141, 277, 'Fast right-hander right after the start/finish straight, climbing toward the Dunlop bridge.'],
+  [2, 'DUNLOP CHICANE', 'LEFT', 110, 'S1', 140, 243, 'First braking zone of the lap. Cars slow hard for the left of the chicane.'],
+  [3, 'DUNLOP CHICANE EXIT', 'RIGHT', 120, 'S1', 120, 258, 'The right-hand exit. Get the power down early for the run to the Esses.'],
+  [4, 'ESSES', 'LEFT', 190, 'S1', 101, 224, 'The first flowing part of the Esses. Rhythm matters more than outright speed.'],
+  [5, 'ESSES', 'RIGHT', 175, 'S1', 89, 216, 'Second Esses kink, setting the car up for Tertre Rouge.'],
+  [6, 'TERTRE ROUGE', 'RIGHT', 150, 'S1', 79, 192, 'The most important corner on the lap: your exit speed carries down the whole Mulsanne Straight.'],
+  [7, 'MULSANNE CHICANE 1', 'CHICANE', 120, 'S2', 239, 108, 'The first chicane on the long straight, breaking up the top-speed run.'],
+  [8, 'MULSANNE CHICANE 2', 'CHICANE', 120, 'S2', 382, 56, 'The second chicane on the straight. Another heavy stop from near top speed.'],
+  [9, 'MULSANNE CORNER', 'RIGHT', 90, 'S2', 524, 62, 'Slow right-hander at the end of the straight. One of the biggest overtaking spots.'],
+  [10, 'INDIANAPOLIS', 'RIGHT', 130, 'S2', 458, 200, 'Quick right-hand kink on the way down to Arnage.'],
+  [11, 'ARNAGE', 'RIGHT', 70, 'S2', 432, 208, 'The slowest corner on the circuit, a tight right.'],
+  [12, 'ARNAGE EXIT', 'RIGHT', 110, 'S2', 458, 232, 'Accelerating out of Arnage toward the Porsche Curves.'],
+  [13, 'PORSCHE CURVES', 'FLAT-OUT', 260, 'S3', 381, 242, 'Entry to the famous fast sequence, taken at big speed.'],
+  [14, 'PORSCHE CURVES', 'FLAT-OUT', 250, 'S3', 345, 285, 'Left-right sweep, with commitment the whole way through.'],
+  [15, 'PORSCHE CURVES', 'RIGHT', 230, 'S3', 320, 246, 'Mid-sequence, loaded up with downforce.'],
+  [16, 'PORSCHE CURVES', 'LEFT', 240, 'S3', 296, 284, 'The tricky middle of the section. Walls are close.'],
+  [17, 'PORSCHE CURVES EXIT', 'RIGHT', 220, 'S3', 277, 248, 'Last of the Porsche Curves, leading to the Ford Chicanes.'],
+  [18, 'FORD CHICANE', 'RIGHT', 100, 'S3', 232, 271, 'Braking for the first Ford chicane.'],
+  [19, 'FORD CHICANE', 'LEFT', 90, 'S3', 218, 282, 'Quick change of direction, riding the kerbs.'],
+  [20, 'FORD CHICANE', 'RIGHT', 100, 'S3', 205, 258, 'Second chicane entry, right beside the pit entry.'],
+  [21, 'FORD CHICANE EXIT', 'LEFT', 110, 'S3', 188, 285, 'Last corner, then flat out over the line to start another lap.'],
 ]
-const PATH = 'M 130 190 L 175 90 Q 190 62 230 62 L 560 62 Q 610 62 620 110 L 610 240 Q 600 285 560 292 L 260 296 Q 150 300 130 240 Z'
+
+const fmtLap = (s) => {
+  const m = Math.floor(s / 60)
+  const r = s - m * 60
+  return `${m}:${r.toFixed(3).padStart(6, '0')}`
+}
 
 export default function Circuit() {
-  const [i, setI] = useState(5)
-  const c = CORNERS[i]
+  const [sel, setSel] = useState(0)
+  const [running, setRunning] = useState(false)
+  const pathRef = useRef(null)
+  const dotRef = useRef(null)
+  const glowRef = useRef(null)
+  const clockRef = useRef(null)
+  const barRef = useRef(null)
+  const lensRef = useRef([])
+  const rafRef = useRef(0)
+  const lastRef = useRef(-1)
+
+  // Find where each corner sits along the track (nearest point), used by the lap run
+  useEffect(() => {
+    const path = pathRef.current
+    if (!path) return
+    const total = path.getTotalLength()
+    const samples = []
+    for (let i = 0; i <= 500; i++) {
+      const L = (i / 500) * total
+      const p = path.getPointAtLength(L)
+      samples.push([L, p.x, p.y])
+    }
+    lensRef.current = CORNERS.map((c) => {
+      let best = 0
+      let bd = Infinity
+      samples.forEach(([L, x, y]) => {
+        const d = (x - c[5]) ** 2 + (y - c[6]) ** 2
+        if (d < bd) {
+          bd = d
+          best = L
+        }
+      })
+      return best
+    })
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [])
+
+  const stop = () => {
+    cancelAnimationFrame(rafRef.current)
+    setRunning(false)
+    if (dotRef.current) dotRef.current.style.visibility = 'hidden'
+    if (glowRef.current) glowRef.current.style.visibility = 'hidden'
+  }
+
+  const run = () => {
+    if (running) return stop()
+    const path = pathRef.current
+    const total = path.getTotalLength()
+    const DURATION = 16000
+    const t0 = performance.now()
+    lastRef.current = -1
+    setRunning(true)
+    dotRef.current.style.visibility = 'visible'
+    glowRef.current.style.visibility = 'visible'
+
+    const step = (now) => {
+      const t = (now - t0) / DURATION
+      if (t >= 1) return stop()
+      const L = t * total
+      const p = path.getPointAtLength(L)
+      ;[dotRef.current, glowRef.current].forEach((el) => {
+        el.setAttribute('cx', p.x)
+        el.setAttribute('cy', p.y)
+      })
+      if (clockRef.current) clockRef.current.textContent = fmtLap(t * LAP_SECONDS)
+      if (barRef.current) barRef.current.style.transform = `scaleX(${t})`
+      let idx = 0
+      lensRef.current.forEach((cl, i) => {
+        if (L >= cl) idx = i
+      })
+      if (idx !== lastRef.current) {
+        lastRef.current = idx
+        setSel(idx)
+      }
+      rafRef.current = requestAnimationFrame(step)
+    }
+    rafRef.current = requestAnimationFrame(step)
+  }
+
+  const c = CORNERS[sel]
 
   return (
-    <section id="circuit" className="mx-auto w-full max-w-7xl px-6 py-28 md:px-16">
-      <div className="font-mono text-[10px] tracking-[0.3em] text-amber-400">03 // TRACK TELEMETRY & SECTOR ANALYSIS</div>
-      <h2 className="mt-2 font-display text-6xl md:text-8xl">CIRCUIT DE LA SARTHE</h2>
-      <p className="mt-2 font-mono text-[11px] tracking-widest text-white/50">13.626 KM // SELECT A CORNER TO INSPECT APEX SPEED, GEAR AND HISTORY</p>
+    <section id="circuit" className="relative px-6 py-24 md:px-16">
+      <div className="mx-auto max-w-7xl">
+        <div className="font-mono text-[10px] tracking-[0.3em] text-white/50">CIRCUIT DE LA SARTHE // 13.626 KM</div>
+        <h2 className="mt-2 font-display text-[clamp(2.5rem,7vw,5.5rem)] leading-none">
+          21 CORNERS. <span className="text-white/30">ONE LAP.</span>
+        </h2>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
-          {CORNERS.map((k, idx) => (
-            <button key={k.n} onClick={() => setI(idx)}
-              className={`flex min-w-[240px] items-center justify-between rounded-xl border px-4 py-3 text-left transition lg:min-w-0 ${idx === i ? 'border-blue-500 bg-blue-500/15' : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.07]'}`}>
-              <div>
-                <div className="font-mono text-[9px] tracking-widest text-amber-400">{k.tag}</div>
-                <div className="font-display text-xl tracking-wide">{k.n}</div>
-              </div>
-              <span className="rounded border border-white/15 bg-black/50 px-2 py-1 font-mono text-[11px]">{k.kmh} KM/H</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:p-6">
-          <svg viewBox="0 0 700 340" className="w-full rounded-xl bg-black/50">
-            <path d={PATH} fill="none" stroke="rgba(43,91,255,0.25)" strokeWidth="18" strokeLinejoin="round" />
-            <path d={PATH} fill="none" stroke="#2b5bff" strokeWidth="6" strokeLinejoin="round" />
-            <path d={PATH} fill="none" stroke="#fff" strokeOpacity="0.8" strokeWidth="1.5" strokeDasharray="10 10" strokeLinejoin="round">
-              <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="1.2s" repeatCount="indefinite" />
-            </path>
-            <rect x="124" y="196" width="12" height="3" fill="#ff2a3a" />
-            <text x="142" y="212" fontSize="9" fill="#ffffff99" fontFamily="monospace">START / FINISH</text>
-            {CORNERS.map((k, idx) => (
-              <g key={k.n} onClick={() => setI(idx)} className="cursor-pointer">
-                {idx === i && (
-                  <circle cx={k.x} cy={k.y} r="12" fill="none" stroke="#ffb020" strokeWidth="2">
-                    <animate attributeName="r" values="9;18;9" dur="1.6s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="1;0;1" dur="1.6s" repeatCount="indefinite" />
-                  </circle>
-                )}
-                <circle cx={k.x} cy={k.y} r="7" fill={idx === i ? '#ffb020' : '#fff'} stroke="#060607" strokeWidth="2" />
-              </g>
+        <div className="mt-10 grid gap-8 lg:grid-cols-[300px_1fr]">
+          {/* corner list */}
+          <div className="flex max-h-[420px] flex-col gap-2 overflow-y-auto overflow-x-hidden pr-3 lg:max-h-[560px]">
+            {CORNERS.map((k, i) => (
+              <button
+                key={k[0]}
+                onClick={() => {
+                  stop()
+                  setSel(i)
+                }}
+                className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left font-mono text-[11px] tracking-[0.15em] ${
+                  sel === i ? 'border-amber-400/70 bg-amber-400/10 text-white' : 'border-white/10 bg-white/5 text-white/60'
+                }`}
+              >
+                <span className="w-6 font-display text-xl leading-none" style={{ color: sel === i ? AMBER : '#fff' }}>
+                  {k[0]}
+                </span>
+                {k[1]}
+              </button>
             ))}
-          </svg>
+          </div>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-[1fr_auto]">
-            <div>
-              <span className="rounded bg-amber-400 px-2 py-0.5 font-mono text-[10px] font-bold text-black">{c.tag}</span>
-              <h3 className="mt-2 font-display text-4xl">{c.n}</h3>
-              <p className="mt-2 max-w-xl text-sm text-white/70">{c.text}</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              {[['APEX SPEED', `${c.kmh}`, '#ffb020'], ['APEX GEAR', `${c.gear}`, '#5b8cff'], ['PEAK LOAD', `${c.g} G`, '#ff4d5a']].map(([l, v, col]) => (
-                <div key={l} className="rounded-xl border border-white/10 bg-black/40 px-4 py-3">
-                  <div className="font-mono text-[8px] tracking-widest text-white/50">{l}</div>
-                  <div className="font-display text-3xl" style={{ color: col }}>{v}</div>
+          {/* map + telemetry */}
+          <div className="min-w-0">
+            <div className="rounded-3xl border border-white/10 bg-black/40 p-3 md:p-5">
+              <svg viewBox="60 40 480 270" className="h-auto w-full" role="img" aria-label="Le Mans circuit map">
+                {/* path #0: dim base road */}
+                <path d={TRACK} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="9" strokeLinejoin="round" strokeLinecap="round" />
+                {/* path #1: the track line that draws itself on scroll */}
+                <path ref={pathRef} d={TRACK} fill="none" stroke={BLUE} strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round" />
+
+                {/* start / finish line */}
+                <rect x="189" y="264" width="4" height="14" fill="#fff" />
+                <text x="165" y="302" textAnchor="middle" fontSize="7" letterSpacing="1.5" fontFamily="'JetBrains Mono', monospace" fill="rgba(255,255,255,0.55)">
+                  START / FINISH
+                </text>
+
+                {/* lap-run dot */}
+                <circle ref={glowRef} r="10" fill={AMBER} opacity="0.3" style={{ visibility: 'hidden' }} />
+                <circle ref={dotRef} r="4.5" fill="#fff" style={{ visibility: 'hidden' }} />
+
+                {/* corners (each is one <g>, animated by scrollFx) */}
+                {CORNERS.map((k, i) => (
+                  <g
+                    key={k[0]}
+                    onClick={() => {
+                      stop()
+                      setSel(i)
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <circle cx={k[5]} cy={k[6]} r="8" fill={sel === i ? AMBER : '#0b0b0e'} stroke={sel === i ? AMBER : 'rgba(255,255,255,0.55)'} strokeWidth="1" />
+                    <text
+                      x={k[5]}
+                      y={k[6]}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize="8"
+                      fontWeight="700"
+                      fontFamily="'JetBrains Mono', monospace"
+                      fill={sel === i ? '#000' : '#fff'}
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {k[0]}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+
+              {/* lap run controls */}
+              <div className="mt-3 flex flex-wrap items-center gap-4 px-1">
+                <button
+                  onClick={run}
+                  className="rounded-xl bg-blue-600 px-5 py-2.5 font-mono text-[11px] tracking-[0.25em] transition hover:bg-blue-500"
+                >
+                  {running ? 'STOP' : 'RUN LAP'}
+                </button>
+                <div className="font-display text-3xl leading-none">
+                  <span ref={clockRef}>0:00.000</span>
                 </div>
-              ))}
+                <div className="h-[3px] min-w-[120px] flex-1 overflow-hidden rounded-full bg-white/10">
+                  <div ref={barRef} className="h-full origin-left rounded-full" style={{ background: AMBER, transform: 'scaleX(0)' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* info panel (replayed by scrollFx whenever the selection changes) */}
+            <div className="mt-5 rounded-3xl border border-white/10 bg-black/40 p-5 md:p-6">
+              <div>
+                <div className="font-mono text-[10px] tracking-[0.3em] text-white/50">TURN {c[0]} // SECTOR {c[4].slice(1)}</div>
+                <h3 className="mt-1 font-display text-4xl leading-none md:text-5xl" style={{ color: AMBER }}>
+                  {c[1]}
+                </h3>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/70">{c[7]}</p>
+              </div>
+              <div className="mt-5 grid grid-cols-3 gap-3">
+                {[
+                  ['TYPE', c[2], ''],
+                  ['APPROX SPEED', String(c[3]), 'KM/H'],
+                  ['SECTOR', c[4], ''],
+                ].map(([l, v, u]) => (
+                  <div key={l} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <div className="font-mono text-[9px] tracking-[0.2em] text-white/50">{l}</div>
+                    <div className="mt-1 font-display text-2xl leading-none md:text-3xl">
+                      {v} <span className="font-mono text-[10px] text-white/50">{u}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

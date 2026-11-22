@@ -10,13 +10,18 @@ function CarPanel({ car, near }) {
   const { accent, name, year } = car
   const { scale, sink } = getTune(car.id)
 
+  // Fit the giant name to the screen: the longer the text, the smaller the font (capped at the old size)
+  const label = `${year} // ${name}`
+  const fontSize = `min(11rem, 10vw, ${(200 / label.length).toFixed(2)}vw)`
+
   return (
     <section className="car-panel relative z-10 h-screen w-screen shrink-0" aria-label={`${year} ${car.fullName}`}>
       {/* LAYER 1: giant background name.
           Outline text + a solid copy on top. Only OPACITY animates (no per-frame colour repaint). */}
       <h2
-        className="js-big-name pointer-events-none absolute inset-x-0 top-[15vh] select-none whitespace-nowrap text-center font-display leading-none text-[clamp(3.5rem,10vw,11rem)]"
+        className="js-big-name pointer-events-none absolute inset-x-0 top-[15vh] select-none whitespace-nowrap px-2 text-center font-display leading-none"
         style={{
+          fontSize,
           opacity: 0,
           color: 'transparent',
           WebkitTextStroke: `2px ${hexToRgba(accent, 0.75)}`,
@@ -27,9 +32,9 @@ function CarPanel({ car, near }) {
           className="js-name-fill pointer-events-none absolute inset-0"
           style={{ opacity: 0, color: hexToRgba(accent, 0.55), WebkitTextStroke: '0' }}
         >
-          {year} // {name}
+          {label}
         </span>
-        {year} // {name}
+        {label}
       </h2>
 
       {/* LAYER 2: car */}

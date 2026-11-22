@@ -1,3 +1,4 @@
+import F1Crossover from './components/F1Crossover'
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -36,6 +37,7 @@ const ErasM = memo(Eras)
 const CircuitM = memo(Circuit)
 const HallOfFameM = memo(HallOfFame)
 const CompareM = memo(Compare)
+const F1CrossoverM = memo(F1Crossover)
 const FooterM = memo(Footer)
 
 const SCROLL_LENGTH = 2.0 // vertical scroll per 100vw of horizontal travel
@@ -297,6 +299,7 @@ export default function App() {
 
       <CircuitM />
       <HallOfFameM />
+            <F1CrossoverM />
       <CompareM />
       <FooterM />
 

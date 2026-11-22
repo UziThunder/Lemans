@@ -42,45 +42,44 @@ export const f1Drivers = [
     id: 'mario-andretti',
     name: 'Mario Andretti',
     f1: 'World Champion (1978)',
-    lemans: 'Winner 1995 (McLaren F1 GTR #59, with Jan Lammers and Justin Wallace)',
-    note: 'Won Le Mans in the same car that appears in this archive.',
+    lemans: 'Class winner and 2nd overall, 1995 (Courage)',
+    note: 'Never won Le Mans outright, but won the Daytona 24 Hours (1972) and the Sebring 12 Hours.',
     portrait: '/assets/drivers/mario-andretti.jpg',
     portraitAlt: 'Portrait of Mario Andretti',
   },
 ]
 
 export const f1Manufacturers = [
-  { id: 'ferrari', name: 'Ferrari', f1: 'Multiple World Constructors\u2019 titles', lemans: 'Many overall wins, including 1958-1962', logo: '/assets/manufacturers/ferrari.svg', logoAlt: 'Ferrari logo' },
-  { id: 'ford', name: 'Ford', f1: 'Cosworth DFV and DFV-derived engines', lemans: 'GT40 and Mk IV wins, 1966-1969 (GT40 #1 and #6 in this archive)', logo: '/assets/manufacturers/ford.svg', logoAlt: 'Ford logo' },
+  { id: 'ferrari', name: 'Ferrari', f1: 'Multiple World Constructors\u2019 titles', lemans: 'Overall wins in 1949, 1954, 1958, 1960-1965 and 2023-2025', logo: '/assets/manufacturers/ferrari.svg', logoAlt: 'Ferrari logo' },
+  { id: 'ford', name: 'Ford', f1: 'Funded the Cosworth DFV engine', lemans: 'Overall wins 1966-1969 (Mk II, Mk IV, GT40)', logo: '/assets/manufacturers/ford.svg', logoAlt: 'Ford logo' },
   { id: 'porsche', name: 'Porsche', f1: 'TAG turbo engine for McLaren, 1983-1987', lemans: 'Record overall wins (19), including 1970 917K and 2016 919 Hybrid', logo: '/assets/manufacturers/porsche.svg', logoAlt: 'Porsche logo' },
-  { id: 'matra', name: 'Matra', f1: 'Grand Prix win and constructors\u2019 title with Tyrrell, 1969', lemans: 'Overall wins 1972-1974', logo: '/assets/manufacturers/matra.svg', logoAlt: 'Matra logo' },
+  { id: 'matra', name: 'Matra', f1: 'Constructors\u2019 title with Tyrrell, 1969', lemans: 'Overall wins 1972-1974', logo: '/assets/manufacturers/matra.svg', logoAlt: 'Matra logo' },
   { id: 'renault-alpine', name: 'Renault / Alpine', f1: 'Works F1 titles (2005, 2006 with Alonso)', lemans: 'Alpine A442 winner, 1978', logo: '/assets/manufacturers/renault-alpine.svg', logoAlt: 'Renault and Alpine logos' },
   { id: 'jaguar', name: 'Jaguar', f1: 'Jaguar Racing F1 team, 2000-2004', lemans: 'XJR-9 win 1988, plus earlier wins 1951-1957', logo: '/assets/manufacturers/jaguar.svg', logoAlt: 'Jaguar logo' },
-  { id: 'mercedes', name: 'Mercedes-Benz', f1: 'Works F1 team, now the modern Mercedes-AMG Petronas team', lemans: 'Wins 1952, 1955 (race involving Levegh), and the 1989 Sauber-Mercedes C9', logo: '/assets/manufacturers/mercedes.svg', logoAlt: 'Mercedes-Benz logo' },
+  { id: 'mercedes', name: 'Mercedes-Benz', f1: 'Works F1 team, now Mercedes-AMG Petronas', lemans: 'Overall wins 1952 and 1989 (Sauber-Mercedes C9)', logo: '/assets/manufacturers/mercedes.svg', logoAlt: 'Mercedes-Benz logo' },
   { id: 'bmw', name: 'BMW', f1: 'BMW Sauber F1 team, 2006-2009', lemans: 'V12 LMR win 1999', logo: '/assets/manufacturers/bmw.svg', logoAlt: 'BMW logo' },
 ]
 
 // Cars with a confirmed F1 link, keyed by car id (see leMansCars.js).
-// Only links to the confirmed list above are counted.
 export const f1CarTags = {
   1: true,  // Ford GT40 1969: Ford
   2: true,  // Porsche 917K 1970: Porsche
   3: true,  // Porsche 956 1982: Porsche
   4: true,  // Jaguar XJR-9 1988: Jaguar
   5: true,  // Sauber-Mercedes C9 1989: Mercedes
-  6: false, // Mazda 787B 1991: Herbert and Gachot were removed from the confirmed list, so no link
-  7: true,  // McLaren F1 GTR 1995: Andretti
+  6: false, // Mazda 787B 1991
+  7: true,  // McLaren F1 GTR 1995: Bruce McLaren founded the team
   8: true,  // BMW V12 LMR 1999: BMW
-  9: false, // Audi R18 2011: no confirmed F1 link
+  9: false, // Audi R18 2011
   10: true, // Porsche 919 2016: Porsche
-  11: false, // Lotus Eleven 1957: Lotus not in the confirmed list
+  11: false,
   12: false,
   13: false,
   14: true, // Ford GT 2016: Ford
   15: false,
   16: false,
   17: false,
-  18: false, // Nissan GT-R LM: Max Chilton was removed from the confirmed list
+  18: false,
   19: true, // Mercedes CLR 1999: Mercedes
   20: true, // Porsche 917/20 1971: Porsche
 }
